@@ -1,0 +1,3 @@
+## 2024-05-18 - [Base64 Decoding O(N²) String Mutation Bottleneck]
+**Learning:** Found a quadratic time complexity anti-pattern in `base64.c` where `memmove` was used inside a loop to remove individual whitespace characters from a string during base64 decoding. This causes O(N^2) complexity for strings with many whitespace characters, which can severely bottleneck string parsing of long encoded payloads.
+**Action:** Next time looking at string parsing or sanitization loops in C, always check if single-character deletions are incorrectly implemented with `memmove`. Replace them with an O(N) two-pointer algorithm to write in-place.
