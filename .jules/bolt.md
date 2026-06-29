@@ -1,0 +1,3 @@
+## 2024-06-29 - Hot Path Heap Allocations in Synchronous Callbacks
+**Learning:** In `FgAirplayServer::audio_process` and `FgAirplayServer::video_process`, wrapper structs (`SFgAudioFrame` and `SFgH264Data`) and media buffers were being heap-allocated (`new`) and deep-copied via `memcpy` on the hot path for every incoming frame, only to be immediately deleted after a synchronous callback (`outputAudio` / `decodeH264Data`).
+**Action:** When inspecting media streaming codebases (especially C/C++), look for synchronous frame handlers that perform unnecessary deep copies or heap allocations. Replace them with stack allocations and direct pointer references (shallow copies) when the downstream caller does not take ownership or queue the memory asynchronously.
