@@ -167,6 +167,8 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 	int outbuflen;
 	char *srcptr;
 	int index;
+	int limit;
+	int pos;
 
 	if (!base64) {
 		base64 = &default_base64;
@@ -184,20 +186,22 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 
 	/* Remove all whitespaces from inbuf */
 	if (base64->skip_spaces) {
-		int i, inbuflen = strlen(inbuf);
+		int i, j = 0;
+		inbuflen = srclen;
 		for (i=0; i<inbuflen; i++) {
 			if (inbuf[i] == '\0') {
 				break;
-			} else if (isspace(inbuf[i])) {
-				memmove(inbuf+i, inbuf+i+1, inbuflen-i);
-				inbuflen -= 1;
-				i -= 1;
+			} else if (!isspace((unsigned char)inbuf[i])) {
+				inbuf[j++] = inbuf[i];
 			}
 		}
+		inbuf[j] = '\0';
+		inbuflen = j;
+	} else {
+		inbuflen = srclen;
 	}
 
 	/* Add padding to inbuf if required */
-	inbuflen = strlen(inbuf);
 	if (!base64->use_padding) {
 		if (inbuflen%4 == 1) {
 			free(inbuf);
@@ -239,6 +243,29 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 
 	index = 0;
 	srcptr = inbuf;
+	limit = inbuflen - 4;
+	pos = 0;
+
+	/* Fast path for full chunks without padding */
+	while (pos <= limit && index < outbuflen - 2) {
+		unsigned char a = base64->charmap[(unsigned char)*(srcptr++)];
+		unsigned char b = base64->charmap[(unsigned char)*(srcptr++)];
+		unsigned char c = base64->charmap[(unsigned char)*(srcptr++)];
+		unsigned char d = base64->charmap[(unsigned char)*(srcptr++)];
+
+		if (a >= BASE64_PADDING || b >= BASE64_PADDING ||
+		    c >= BASE64_PADDING || d >= BASE64_PADDING) {
+			srcptr -= 4;
+			break;
+		}
+
+		outbuf[index++] = (a << 2) | (b >> 4);
+		outbuf[index++] = (b << 4) | (c >> 2);
+		outbuf[index++] = (c << 6) | d;
+		pos += 4;
+	}
+
+	/* Slow path for the rest (padding or errors) */
 	while (*srcptr) {
 		unsigned char a = base64->charmap[(unsigned char)*(srcptr++)];
 		unsigned char b = base64->charmap[(unsigned char)*(srcptr++)];
@@ -247,9 +274,13 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 
 		if (a == BASE64_INVALID || b == BASE64_INVALID ||
 		    c == BASE64_INVALID || d == BASE64_INVALID) {
+			free(inbuf);
+			free(outbuf);
 			return -5;
 		}
 		if (a == BASE64_PADDING || b == BASE64_PADDING) {
+			free(inbuf);
+			free(outbuf);
 			return -6;
 		}
 
