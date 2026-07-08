@@ -182,18 +182,19 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 	memcpy(inbuf, src, srclen);
 	inbuf[srclen] = '\0';
 
-	/* Remove all whitespaces from inbuf */
+	/* Remove all whitespaces from inbuf
+	 * Bolt Performance Note: Replaced O(N^2) memmove loop with O(N) two-pointer approach
+	 * Expected Impact: Significantly faster decoding for large inputs containing whitespace */
 	if (base64->skip_spaces) {
-		int i, inbuflen = strlen(inbuf);
+		int i, j = 0, inbuflen = strlen(inbuf);
 		for (i=0; i<inbuflen; i++) {
 			if (inbuf[i] == '\0') {
 				break;
-			} else if (isspace(inbuf[i])) {
-				memmove(inbuf+i, inbuf+i+1, inbuflen-i);
-				inbuflen -= 1;
-				i -= 1;
+			} else if (!isspace(inbuf[i])) {
+				inbuf[j++] = inbuf[i];
 			}
 		}
+		inbuf[j] = '\0';
 	}
 
 	/* Add padding to inbuf if required */
