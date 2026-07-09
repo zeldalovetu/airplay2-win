@@ -184,16 +184,18 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 
 	/* Remove all whitespaces from inbuf */
 	if (base64->skip_spaces) {
-		int i, inbuflen = strlen(inbuf);
-		for (i=0; i<inbuflen; i++) {
-			if (inbuf[i] == '\0') {
-				break;
-			} else if (isspace(inbuf[i])) {
-				memmove(inbuf+i, inbuf+i+1, inbuflen-i);
-				inbuflen -= 1;
-				i -= 1;
+		/* Bolt Performance Optimization:
+		 * Replace O(n^2) memmove logic with O(n) two-pointer approach
+		 * This significantly speeds up base64 decoding for large strings with many newlines/spaces. */
+		char *src_ptr = inbuf;
+		char *dst_ptr = inbuf;
+		while (*src_ptr != '\0') {
+			if (!isspace((unsigned char)*src_ptr)) {
+				*dst_ptr++ = *src_ptr;
 			}
+			src_ptr++;
 		}
+		*dst_ptr = '\0';
 	}
 
 	/* Add padding to inbuf if required */
