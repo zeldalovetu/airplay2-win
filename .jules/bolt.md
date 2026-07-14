@@ -1,0 +1,3 @@
+## 2024-03-24 - O(n^2) memmove string filtering in C
+**Learning:** Found a classic C performance anti-pattern where filtering characters from a string using `memmove` inside a loop results in O(n^2) time complexity. For large strings, this causes massive CPU spikes.
+**Action:** Always replace in-place string manipulation loops that shift memory with a simple two-pointer (read/write) approach for O(n) performance.
