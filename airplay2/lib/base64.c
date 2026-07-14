@@ -184,16 +184,14 @@ base64_decode(base64_t *base64, unsigned char **dst, const char *src, int srclen
 
 	/* Remove all whitespaces from inbuf */
 	if (base64->skip_spaces) {
-		int i, inbuflen = strlen(inbuf);
-		for (i=0; i<inbuflen; i++) {
-			if (inbuf[i] == '\0') {
-				break;
-			} else if (isspace(inbuf[i])) {
-				memmove(inbuf+i, inbuf+i+1, inbuflen-i);
-				inbuflen -= 1;
-				i -= 1;
+		/* Optimization: use a two-pointer O(n) approach instead of O(n^2) memmove */
+		int i, j;
+		for (i = 0, j = 0; inbuf[i]; i++) {
+			if (!isspace(inbuf[i])) {
+				inbuf[j++] = inbuf[i];
 			}
 		}
+		inbuf[j] = '\0';
 	}
 
 	/* Add padding to inbuf if required */
