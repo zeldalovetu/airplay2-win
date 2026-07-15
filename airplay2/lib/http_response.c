@@ -40,12 +40,15 @@ http_response_add_data(http_response_t *response, const char *data, int datalen)
 	assert(datalen > 0);
 
 	newdatasize = response->data_size;
-	while (response->data_size+datalen > newdatasize) {
+	/* ⚡ Bolt: Fix reallocation logic to compare against data_length, not data_size */
+	while (response->data_length+datalen > newdatasize) {
 		newdatasize *= 2;
 	}
 	if (newdatasize != response->data_size) {
 		response->data = realloc(response->data, newdatasize);
 		assert(response->data);
+		/* ⚡ Bolt: Update data_size after realloc to prevent O(N^2) memory reallocations */
+		response->data_size = newdatasize;
 	}
 	memcpy(response->data+response->data_length, data, datalen);
 	response->data_length += datalen;
