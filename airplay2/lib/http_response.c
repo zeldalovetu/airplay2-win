@@ -40,12 +40,19 @@ http_response_add_data(http_response_t *response, const char *data, int datalen)
 	assert(datalen > 0);
 
 	newdatasize = response->data_size;
-	while (response->data_size+datalen > newdatasize) {
+	/* Bolt Optimization:
+	 * Previously this checked `response->data_size + datalen > newdatasize`
+	 * which incorrectly caused a reallocation on almost every single append, leading to O(N^2) overhead.
+	 * Also fixed a bug where `response->data_size` was never updated after reallocation.
+	 * Now uses standard dynamic array growth (O(1) amortized appends).
+	 */
+	while (response->data_length+datalen > newdatasize) {
 		newdatasize *= 2;
 	}
 	if (newdatasize != response->data_size) {
 		response->data = realloc(response->data, newdatasize);
 		assert(response->data);
+		response->data_size = newdatasize;
 	}
 	memcpy(response->data+response->data_length, data, datalen);
 	response->data_length += datalen;
