@@ -22,12 +22,17 @@ ctr128_inc(uint8_t *counter)
 {
 	uint32_t n = 16, c = 1;
 
+	/*
+	 * Performance optimization:
+	 * Break early if there's no carry ('c' becomes 0).
+	 * 255 out of 256 times, we'll only do one iteration.
+	 */
 	do {
 		--n;
 		c += counter[n];
 		counter[n] = (uint8_t) c;
 		c >>= 8;
-	} while (n);
+	} while (n && c);
 }
 
 void
