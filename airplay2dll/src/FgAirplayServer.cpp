@@ -146,7 +146,7 @@ void FgAirplayServer::stop()
 
 float FgAirplayServer::setScale(float fRatio)
 {
-	m_fScaleRatio = min(10, max(0.1, fRatio));
+	m_fScaleRatio = (std::min)(10.0f, (std::max)(0.1f, fRatio));
 
 	FgAirplayChannelMap::iterator it;
 	for (it = m_mapChannel.begin(); it != m_mapChannel.end(); ++it)
@@ -249,18 +249,16 @@ void FgAirplayServer::audio_process(void* cls, pcm_data_struct* data, const char
 
 	if (pServer->m_pCallback != NULL)
 	{
-		SFgAudioFrame* frame = new SFgAudioFrame();
-		frame->bitsPerSample = data->bits_per_sample;
-		frame->channels = data->channels;
-		frame->pts = data->pts;
-		frame->sampleRate = data->sample_rate;
-		frame->dataLen = data->data_len;
-		frame->data = new uint8_t[frame->dataLen];
-		memcpy(frame->data, data->data, frame->dataLen);
+		// ⚡ Bolt: Stack allocation and direct pointer reference to avoid O(n) memcpy and heap allocation
+		SFgAudioFrame frame;
+		frame.bitsPerSample = data->bits_per_sample;
+		frame.channels = data->channels;
+		frame.pts = data->pts;
+		frame.sampleRate = data->sample_rate;
+		frame.dataLen = data->data_len;
+		frame.data = (uint8_t*)data->data;
 
-		pServer->m_pCallback->outputAudio(frame, remoteName, remoteDeviceId);
-		delete[] frame->data;
-		delete frame;
+		pServer->m_pCallback->outputAudio(&frame, remoteName, remoteDeviceId);
 	}
 }
 
@@ -285,21 +283,20 @@ void FgAirplayServer::video_process(void* cls, h264_decode_struct* h264data, con
 		return;
 	}
 
-	SFgH264Data* pData = new SFgH264Data();
-	memset(pData, 0, sizeof(SFgH264Data));
+	// ⚡ Bolt: Stack allocation and direct pointer reference to avoid O(n) memcpy and heap allocation
+	SFgH264Data stackData;
+	memset(&stackData, 0, sizeof(SFgH264Data));
 
 	if (h264data->frame_type == 0)
 	{
-		pData->size = h264data->data_len;
-		pData->data = new uint8_t[pData->size];
-		pData->is_key = 1;
-		memcpy(pData->data, h264data->data, h264data->data_len);
+		stackData.size = h264data->data_len;
+		stackData.data = h264data->data;
+		stackData.is_key = 1;
 	}
 	else if (h264data->frame_type == 1)
 	{
-		pData->size = h264data->data_len;
-		pData->data = new uint8_t[pData->size];
-		memcpy(pData->data, h264data->data, h264data->data_len);
+		stackData.size = h264data->data_len;
+		stackData.data = h264data->data;
 	}
 
 	FgAirplayChannel* pChannel = NULL;
@@ -312,11 +309,9 @@ void FgAirplayServer::video_process(void* cls, h264_decode_struct* h264data, con
 	}
 	if (pChannel)
 	{
-		pChannel->decodeH264Data(pData, remoteName, remoteDeviceId);
+		pChannel->decodeH264Data(&stackData, remoteName, remoteDeviceId);
 		pChannel->release();
 	}
-	delete[] pData->data;
-	delete pData;
 }
 
 void FgAirplayServer::ap_video_play(void* cls, char* url, double volume, double start_pos)
