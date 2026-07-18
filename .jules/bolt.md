@@ -1,0 +1,3 @@
+## 2024-05-24 - Zero-copy media processing via stack allocation
+**Learning:** High-frequency media processing pipelines (like AirPlay video/audio processing) often inadvertently perform unnecessary deep copies via heap allocations (`new` + `memcpy` + `delete`). If the downstream consumers are synchronous and do not assume ownership, these heap copies can be safely replaced by short-lived stack structs pointing directly to the original buffers, entirely eliminating O(N) copy overhead.
+**Action:** Always inspect callback implementations in media pipelines to see if temporary heap structures can be replaced with stack allocations and pointer assignments.
