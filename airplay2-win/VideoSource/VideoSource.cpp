@@ -184,12 +184,17 @@ VideoSource::VideoSource()
     pixelData   = nullptr;
 	mediaWidth  = 0;
 	mediaHeight = 0;
+	allocWidth  = 0;
+	allocHeight = 0;
 	isAudioInited = 0;
 
 	MUTEX_CREATE(textureLock);
 
 	media_sws_context = nullptr;
 	pMediaFrame    = av_frame_alloc();
+	pMediaFrame->data[0] = nullptr;
+	pMediaFrame->data[1] = nullptr;
+	pMediaFrame->data[2] = nullptr;
 	pMediaFrameYUV = av_frame_alloc();
 
 	start_airplay();
@@ -202,6 +207,10 @@ VideoSource::~VideoSource()
 		delete vs;
 		vs = nullptr;
 	}
+
+	if (pMediaFrame->data[0]) free(pMediaFrame->data[0]);
+	if (pMediaFrame->data[1]) free(pMediaFrame->data[1]);
+	if (pMediaFrame->data[2]) free(pMediaFrame->data[2]);
 
 	av_free(pMediaFrame);
 	av_free(pMediaFrameYUV);
@@ -232,9 +241,20 @@ void unlock(void *data, void *id, void *const *pixelData)
 {
     VideoSource *_this = static_cast<VideoSource *>(data);
 
-	_this->pMediaFrame->data[0] = (uint8_t *)malloc(_this->mediaWidth * _this->mediaHeight);
-	_this->pMediaFrame->data[1] = (uint8_t *)malloc((_this->mediaWidth / 2) * (_this->mediaHeight / 2));
-	_this->pMediaFrame->data[2] = (uint8_t *)malloc((_this->mediaWidth / 2) * (_this->mediaHeight / 2));
+	// ⚡ Bolt: Cache and reuse pMediaFrame buffers to prevent massive heap churn
+	if (_this->allocWidth != _this->mediaWidth || _this->allocHeight != _this->mediaHeight || _this->pMediaFrame->data[0] == nullptr)
+	{
+		if (_this->pMediaFrame->data[0]) free(_this->pMediaFrame->data[0]);
+		if (_this->pMediaFrame->data[1]) free(_this->pMediaFrame->data[1]);
+		if (_this->pMediaFrame->data[2]) free(_this->pMediaFrame->data[2]);
+
+		_this->pMediaFrame->data[0] = (uint8_t *)malloc(_this->mediaWidth * _this->mediaHeight);
+		_this->pMediaFrame->data[1] = (uint8_t *)malloc((_this->mediaWidth / 2) * (_this->mediaHeight / 2));
+		_this->pMediaFrame->data[2] = (uint8_t *)malloc((_this->mediaWidth / 2) * (_this->mediaHeight / 2));
+
+		_this->allocWidth = _this->mediaWidth;
+		_this->allocHeight = _this->mediaHeight;
+	}
 
 	_this->pMediaFrame->linesize[0] = _this->mediaWidth;
 	_this->pMediaFrame->linesize[1] = _this->mediaWidth >> 1;
@@ -297,9 +317,7 @@ void unlock(void *data, void *id, void *const *pixelData)
 
 	SDL_UnlockYUVOverlay(_this->bmp);
 
-	free(_this->pMediaFrame->data[0]);
-	free(_this->pMediaFrame->data[1]);
-	free(_this->pMediaFrame->data[2]);
+	// ⚡ Bolt: Removed free() calls here, buffers are cached and reused
 
 	rect.x = 0;
 	rect.y = 0;

@@ -154,6 +154,8 @@ public:
 
     unsigned int mediaWidth;
     unsigned int mediaHeight;
+    unsigned int allocWidth;
+    unsigned int allocHeight;
 
     // should only be set inside texture lock
     bool isRendering;
