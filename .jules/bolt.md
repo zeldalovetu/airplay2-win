@@ -1,0 +1,3 @@
+## 2026-07-25 - [GetSystemTimeAsFileTime replaces legacy Windows CE GetSystemTime + SystemTimeToFileTime fallback]
+**Learning:** [This codebase contains a legacy Windows CE fallback that does two-step system time collection and filetime conversion for no reason in a hotpath, rather than using standard direct GetSystemTimeAsFileTime calls which avoid system time calendar math overhead.]
+**Action:** [In Windows C/C++ development, prefer calling GetSystemTimeAsFileTime directly over the two-step GetSystemTime + SystemTimeToFileTime (a legacy Windows CE fallback) to avoid unnecessary calendar math overhead, especially on high-frequency hot paths like IPC messaging.]

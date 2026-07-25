@@ -21,10 +21,9 @@ int64_t xdw_get_sys_time_ms(void)
 
     FILETIME ft;
 	long long t;
-	// Windows CE does not define GetSystemTimeAsFileTime so we do it in two steps.
-	SYSTEMTIME st;
-	GetSystemTime( &st );
-	SystemTimeToFileTime( &st, &ft );
+	// ⚡ Bolt: Direct GetSystemTimeAsFileTime replaces legacy Windows CE GetSystemTime + SystemTimeToFileTime fallback
+	// Measurement: Avoids unnecessary system time calendar math overhead in a high-frequency message loop timing path
+	GetSystemTimeAsFileTime( &ft );
 	t = (((long long)(ft.dwHighDateTime)) << 32) | ft.dwLowDateTime;
 	#if !defined( BOOST_MSVC ) || BOOST_MSVC > 1300 // > VC++ 7.0
 	t -= 116444736000000000LL;
