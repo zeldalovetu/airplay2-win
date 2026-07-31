@@ -1,0 +1,3 @@
+## 2024-07-31 - Optimize system time retrieval in IPC hot path
+**Learning:** In Windows C/C++ development, calling `GetSystemTime` followed by `SystemTimeToFileTime` introduces unnecessary calendar math overhead when only a high-resolution file time is needed. This is especially impactful on high-frequency hot paths like IPC messaging.
+**Action:** Prefer calling `GetSystemTimeAsFileTime` directly to avoid this overhead, but preserve legacy Windows CE fallbacks (e.g., using `#if defined(_WIN32_WCE)`) since Windows CE does not define `GetSystemTimeAsFileTime`.
