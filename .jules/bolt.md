@@ -1,0 +1,3 @@
+## 2024-06-25 - Avoid POSIX structure redefinitions in mock headers
+**Learning:** When mocking Windows headers (`windows.h`, `winsock2.h`) for syntax-checking Windows C/C++ code in a Linux sandbox, defining standard POSIX structures like `struct timeval` within the mock headers can lead to type redefinition compilation errors if the source code already includes standard Linux headers (e.g., `<stdlib.h>` via other includes).
+**Action:** Only define Windows-specific types (e.g., `HANDLE`, `FILETIME`, `SYSTEMTIME`) in mock headers and avoid standard POSIX structs unless absolutely necessary and properly guarded against native definitions.
