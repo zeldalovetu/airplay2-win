@@ -1,0 +1,3 @@
+#ifndef DUMMY_WINSOCK2_H
+#define DUMMY_WINSOCK2_H
+#endif // DUMMY_WINSOCK2_H
