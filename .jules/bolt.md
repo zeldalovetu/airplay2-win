@@ -1,0 +1,3 @@
+## 2024-06-03 - GetSystemTimeAsFileTime vs GetSystemTime in Windows
+**Learning:** `GetSystemTime` followed by `SystemTimeToFileTime` performs expensive calendar math to extract the current time into a `SYSTEMTIME` struct, only to immediately repack it into `FILETIME`.
+**Action:** When a raw tick count is needed and standard `<windows.h>` is available, directly call `GetSystemTimeAsFileTime`. However, always maintain a `#if defined(_WIN32_WCE)` fallback, as Windows CE does not support this direct function.
