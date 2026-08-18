@@ -1,0 +1,3 @@
+## 2024-10-24 - Calendar Math Overhead on Windows Time Retrieval
+**Learning:** Legacy codebase support for Windows CE (`_WIN32_WCE`) often results in suboptimal two-step time retrieval (`GetSystemTime` followed by `SystemTimeToFileTime`) because CE lacks `GetSystemTimeAsFileTime`. This incurs significant and unnecessary calendar math overhead when compiling for modern Windows targets, particularly impactful on high-frequency paths like IPC messaging loops.
+**Action:** Always wrap legacy Windows CE time retrieval fallbacks in `#if defined(_WIN32_WCE)` blocks and default to `GetSystemTimeAsFileTime` for non-CE builds to avoid CPU bloat.
