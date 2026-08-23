@@ -1,0 +1,3 @@
+## 2024-05-23 - [Optimization] Direct GetSystemTimeAsFileTime instead of two-step
+**Learning:** In Windows C/C++ development, prefer calling GetSystemTimeAsFileTime directly over the two-step GetSystemTime + SystemTimeToFileTime to avoid unnecessary calendar math overhead, especially on high-frequency hot paths like IPC messaging. However, ensure to preserve legacy Windows CE fallbacks (e.g., using #if defined(_WIN32_WCE)) since Windows CE does not define GetSystemTimeAsFileTime.
+**Action:** Always check if a two-step system time fetching function is used and replace it with direct calls if applicable, ensuring fallback for unsupported platforms.
