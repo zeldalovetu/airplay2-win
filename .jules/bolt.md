@@ -1,0 +1,4 @@
+
+## 2024-05-18 - [Optimization] Avoid calendar math in high-frequency time functions
+**Learning:** Legacy Windows APIs like `GetSystemTime()` followed by `SystemTimeToFileTime()` introduce unnecessary calendar math (calculating year, month, day, etc.) which adds overhead when only a monotonic or epoch timestamp is needed. Additionally, assigning the final result into `tv_sec` / `tv_usec` and then immediately recombining them into microseconds does redundant integer division and modulo.
+**Action:** In Windows C/C++ projects, prefer calling `GetSystemTimeAsFileTime()` directly, bypassing the calendar conversion. Always check if a division-then-multiply logic can be simplified by directly returning the raw unit (e.g. microseconds). Keep `#if defined(_WIN32_WCE)` fallback if targeting Windows CE which lacks the direct API.
