@@ -1,0 +1,22 @@
+--- ./airplay2-win/VideoSource/utils/xdw_socket_ipc.c
++++ ./airplay2-win/VideoSource/utils/xdw_socket_ipc.c
+@@ -23,6 +23,8 @@
+	GetSystemTime( &st );
+	SystemTimeToFileTime( &st, &ft );
+ #else
++	// ⚡ Bolt: Use GetSystemTimeAsFileTime directly to avoid unnecessary calendar math overhead
++	// from GetSystemTime + SystemTimeToFileTime on high-frequency paths.
+	GetSystemTimeAsFileTime( &ft );
+ #endif
+	t = (((long long)(ft.dwHighDateTime)) << 32) | ft.dwLowDateTime;
+@@ -32,7 +34,8 @@
+	t -= 116444736000000000;
+	#endif
+	t /= 10;  // microseconds
+
+-
+-
++	// ⚡ Bolt: Removed redundant splitting of time into seconds and microseconds
++	// to eliminate unnecessary CPU cycles.
+	return (int64_t)t;
+ }
