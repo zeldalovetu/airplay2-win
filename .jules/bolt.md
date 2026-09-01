@@ -1,0 +1,3 @@
+## 2024-05-15 - [Avoid Redundant Arithmetic in Time Functions]
+**Learning:** Found a performance bottleneck in `xdw_get_sys_time_ms` where raw time units were unnecessarily divided into seconds/microseconds and then immediately recombined, wasting CPU cycles on a hot path (IPC messaging). Also found unnecessary calendar math from `GetSystemTime` instead of `GetSystemTimeAsFileTime`.
+**Action:** When working on Windows system time functions, return raw units directly where possible, and prefer `GetSystemTimeAsFileTime` to skip calendar structure overhead unless Windows CE support is explicitly needed.
