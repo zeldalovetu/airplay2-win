@@ -1,0 +1,3 @@
+## 2024-05-20 - Optimize GetSystemTime and redundant arithmetic in IPC hot path
+**Learning:** Found redundant operations in `xdw_get_sys_time_ms`: converting time to `FILETIME` via `GetSystemTime` (which has calendar overhead) when `GetSystemTimeAsFileTime` is available outside of Windows CE. Also discovered it splits raw epoch time into seconds and microseconds with expensive div/mod ops, only to immediately multiply and add them back together.
+**Action:** Use `GetSystemTimeAsFileTime` with a fallback for Windows CE, and return the raw microsecond value directly to eliminate CPU cycles in this high-frequency IPC messaging path.
