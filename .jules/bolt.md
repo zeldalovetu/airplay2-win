@@ -1,0 +1,3 @@
+## 2024-05-24 - [Avoid Redundant Arithmetic in High-Frequency Time Lookups]
+**Learning:** In performance-critical paths (e.g., IPC messaging in `xdw_socket_ipc.c`), splitting raw epoch time into seconds and microseconds (via division and modulo) only to immediately recombine them adds unnecessary CPU overhead. Furthermore, using `GetSystemTime` + `SystemTimeToFileTime` introduces calendar math overhead compared to `GetSystemTimeAsFileTime`.
+**Action:** When working on Windows C/C++ development, prefer calling `GetSystemTimeAsFileTime` directly, but ensure to preserve legacy Windows CE fallbacks since it does not define `GetSystemTimeAsFileTime`. Also, return raw time units directly when possible to eliminate unnecessary arithmetic operations.
