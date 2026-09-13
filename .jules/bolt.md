@@ -1,0 +1,3 @@
+## 2024-09-13 - [Eliminated redundant calendar math in IPC messaging]
+**Learning:** In performance-critical paths (e.g., IPC messaging), redundant arithmetic operations like splitting raw epoch time into seconds and microseconds (via division and modulo) only to immediately recombine them can cause unnecessary CPU overhead. Furthermore, `GetSystemTime` + `SystemTimeToFileTime` is slower than `GetSystemTimeAsFileTime` in Windows C/C++ development.
+**Action:** When working with epoch time in high-frequency functions, return the raw time unit directly and use `GetSystemTimeAsFileTime` directly, but ensure to preserve legacy Windows CE fallbacks (e.g., using `#if defined(_WIN32_WCE)`) since Windows CE does not define `GetSystemTimeAsFileTime`.
