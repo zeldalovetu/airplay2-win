@@ -1,0 +1,1 @@
+## 2024-05-15 - Bolt Optimization Process\n**Learning:** Need to find C/C++ performance opportunities such as redundant math in hot loops or IPC paths.\n**Action:** Profile hot functions and replace inefficient arithmetic or OS calls.
