@@ -1,0 +1,3 @@
+## 2024-05-18 - Optimize xdw_get_sys_time_ms
+**Learning:** In high-frequency IPC messaging paths, calculating the current epoch time via `GetSystemTime` followed by `SystemTimeToFileTime` incurs unnecessary calendar math overhead. Furthermore, splitting the resulting raw epoch time into seconds and microseconds just to immediately recombine them into microseconds is redundant.
+**Action:** Use `GetSystemTimeAsFileTime` directly instead of the two-step process (while preserving the CE fallback using `#if defined(_WIN32_WCE)`). Also, directly return the calculated microseconds (`t / 10`) instead of performing division and modulo to separate and then recombine seconds and microseconds.
