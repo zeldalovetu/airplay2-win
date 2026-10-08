@@ -1,0 +1,3 @@
+## 2024-05-24 - Optimize time retrieval in xdw_socket_ipc.c
+**Learning:** Found an extremely inefficient time retrieval function `xdw_get_sys_time_ms` that breaks a microsecond timestamp into seconds and microseconds via division and modulo, only to immediately multiply and add them back together to return microseconds. It also uses the slow two-step `GetSystemTime` + `SystemTimeToFileTime` instead of `GetSystemTimeAsFileTime`.
+**Action:** Replace two-step time retrieval with `GetSystemTimeAsFileTime` (with Windows CE fallback) and eliminate redundant division/modulo arithmetic on the hot path.
