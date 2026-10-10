@@ -1,0 +1,3 @@
+## 2023-10-10 - Avoid redundant calendar math in xdw_get_sys_time_ms
+**Learning:** `xdw_get_sys_time_ms` in `airplay2-win/VideoSource/utils/xdw_socket_ipc.c` performs redundant calendar math: it computes `tv_sec` and `tv_usec` from raw microseconds just to immediately multiply `tv_sec` by 1000000 and add `tv_usec` back together on return.
+**Action:** Return the raw computed time in microseconds directly to eliminate unnecessary CPU cycles in this high-frequency IPC messaging path. Also prefer `GetSystemTimeAsFileTime` over `GetSystemTime` + `SystemTimeToFileTime`, while preserving Windows CE fallback.
