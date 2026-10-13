@@ -1,0 +1,3 @@
+## 2024-05-24 - [Avoid redundant arithmetic and calendar math in time functions]
+**Learning:** `xdw_get_sys_time_ms` was splitting a raw microsecond timestamp into seconds and microseconds via expensive division and modulo, only to immediately recombine them before returning. Furthermore, it used a two-step `GetSystemTime` + `SystemTimeToFileTime` process, adding unnecessary calendar math overhead on a hot IPC path.
+**Action:** Always return the raw time unit directly if it matches the target unit. Use `GetSystemTimeAsFileTime` directly to bypass calendar math on modern Windows, but preserve `#if defined(_WIN32_WCE)` fallbacks.
