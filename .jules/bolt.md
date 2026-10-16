@@ -1,0 +1,3 @@
+## 2024-10-16 - Eliminate redundant calendar math and unit conversions in IPC high-frequency clock checks
+**Learning:** `xdw_get_sys_time_ms` was unnecessarily fetching system time as calendar `SYSTEMTIME` (slow) just to convert it to `FILETIME` epochs, and then doing modulo/division arithmetic to construct a `timeval` structure only to immediately combine it back into microseconds.
+**Action:** When working on Windows C/C++ IPC paths, check for `GetSystemTime` used in tandem with `SystemTimeToFileTime`. If present without Windows CE requirements, replace with the faster `GetSystemTimeAsFileTime`. Also, always eliminate redundant `timeval` component splitting/recombination when a raw epoch time unit is all that's returned.
