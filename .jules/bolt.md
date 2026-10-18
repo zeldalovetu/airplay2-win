@@ -1,0 +1,3 @@
+## 2024-10-18 - Avoid redundant calendar math and time splitting in xdw_get_sys_time_ms
+**Learning:** Found an anti-pattern in `xdw_get_sys_time_ms` where it unnecessarily splits microseconds into seconds and microseconds via division and modulo, only to immediately recombine them back into microseconds. Additionally, it used `GetSystemTime` + `SystemTimeToFileTime` instead of the more efficient `GetSystemTimeAsFileTime` which avoids calendar calculations.
+**Action:** When working on performance-critical paths like IPC, always look for unnecessary conversions, redundant arithmetic, and inefficient system calls. Return raw values directly whenever possible.
