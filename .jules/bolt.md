@@ -1,0 +1,3 @@
+## 2024-10-22 - Redundant Math and Unnecessary Calendar API in Time Functions
+**Learning:** Found an IPC path where `xdw_get_sys_time_ms` unnecessarily split microseconds into seconds and microseconds via division/modulo only to immediately recombine them. Also, the function used a two-step `GetSystemTime` + `SystemTimeToFileTime` approach which is slower than `GetSystemTimeAsFileTime`. Finally, the function suffix `_ms` is misleading since it returns microseconds.
+**Action:** Use `GetSystemTimeAsFileTime` directly for high-frequency time access (with `#if defined(_WIN32_WCE)` fallback), and directly return the computed raw time instead of decomposing and reconstructing it.
