@@ -1,0 +1,3 @@
+## 2024-10-25 - Avoid redundant calendar math in IPC messaging
+**Learning:** In the `airplay2-win` codebase, `xdw_get_sys_time_ms` (used heavily for IPC messaging timestamps) suffers from two unnecessary performance overheads: 1) it uses `GetSystemTime` + `SystemTimeToFileTime` (incurring calendar math) instead of `GetSystemTimeAsFileTime`, and 2) it redundantly splits epoch time into `tv_sec` and `tv_usec` just to immediately recombine them back into microseconds.
+**Action:** When working on Windows IPC timestamping, prefer `GetSystemTimeAsFileTime` (retaining `GetSystemTime` fallback for `_WIN32_WCE`) and return the raw computed microseconds to eliminate redundant CPU cycles.
