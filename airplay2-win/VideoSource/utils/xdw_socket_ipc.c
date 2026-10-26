@@ -17,25 +17,25 @@ int64_t xdw_get_sys_time_ms(void)
 	//gettimeofday(&tv, NULL);
 	//return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 
-	struct timeval tp;
-
     FILETIME ft;
 	long long t;
 	// Windows CE does not define GetSystemTimeAsFileTime so we do it in two steps.
+#if defined(_WIN32_WCE)
 	SYSTEMTIME st;
 	GetSystemTime( &st );
 	SystemTimeToFileTime( &st, &ft );
+#else
+	GetSystemTimeAsFileTime( &ft );
+#endif
 	t = (((long long)(ft.dwHighDateTime)) << 32) | ft.dwLowDateTime;
 	#if !defined( BOOST_MSVC ) || BOOST_MSVC > 1300 // > VC++ 7.0
 	t -= 116444736000000000LL;
 	#else
 	t -= 116444736000000000;
 	#endif
-	t /= 10;  // microseconds
-	tp.tv_sec =  (long)( t / 1000000UL);
-	tp.tv_usec = (long)( t % 1000000UL);
-
-	return (int64_t)tp.tv_sec * 1000000 + tp.tv_usec;
+	// Directly return the microseconds since epoch to avoid unnecessary arithmetic operations
+	// (converting to timeval and back).
+	return (int64_t)(t / 10);
 }
 
 
