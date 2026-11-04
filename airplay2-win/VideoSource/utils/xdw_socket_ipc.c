@@ -17,8 +17,6 @@ int64_t xdw_get_sys_time_ms(void)
 	//gettimeofday(&tv, NULL);
 	//return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 
-	struct timeval tp;
-
     FILETIME ft;
 	long long t;
 	// Windows CE does not define GetSystemTimeAsFileTime so we do it in two steps.
@@ -32,10 +30,9 @@ int64_t xdw_get_sys_time_ms(void)
 	t -= 116444736000000000;
 	#endif
 	t /= 10;  // microseconds
-	tp.tv_sec =  (long)( t / 1000000UL);
-	tp.tv_usec = (long)( t % 1000000UL);
 
-	return (int64_t)tp.tv_sec * 1000000 + tp.tv_usec;
+	// ⚡ Bolt: Return the raw microseconds directly to avoid redundant division/modulo arithmetic.
+	return (int64_t)t;
 }
 
 
