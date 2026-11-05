@@ -1,0 +1,3 @@
+## 2024-11-05 - Redundant Arithmetic in Time Retrieval
+**Learning:** In `xdw_get_sys_time_ms`, time was calculated by splitting microseconds into seconds and microseconds via division and modulo, only to immediately multiply and add them back together for the return value. Furthermore, `GetSystemTime` and `SystemTimeToFileTime` were used on all platforms just for Windows CE compatibility, incurring significant calendar math overhead.
+**Action:** Use `GetSystemTimeAsFileTime` directly for non-CE platforms and return the raw microsecond value to eliminate unnecessary CPU cycles on hot paths like IPC messaging.
