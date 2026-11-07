@@ -1,0 +1,3 @@
+## 2024-05-13 - Avoid redundant time arithmetic in hot paths
+**Learning:** In performance-critical paths (e.g., IPC messaging), `xdw_get_sys_time_ms` was splitting raw epoch time into seconds and microseconds (via division and modulo) only to immediately recombine them, wasting CPU cycles. Additionally, calling `GetSystemTime` followed by `SystemTimeToFileTime` incurs unnecessary calendar math overhead compared to `GetSystemTimeAsFileTime`.
+**Action:** Remove redundant division/modulo arithmetic and return the raw time unit directly. Prefer `GetSystemTimeAsFileTime` directly, but preserve `#if defined(_WIN32_WCE)` fallback.
