@@ -1,0 +1,3 @@
+## 2024-05-18 - Avoid redundant time operations in IPC messaging
+**Learning:** In performance-critical paths (e.g., IPC messaging), avoid redundant arithmetic operations like splitting raw epoch time into seconds and microseconds (via division and modulo) only to immediately recombine them. In Windows C/C++ development, prefer calling GetSystemTimeAsFileTime directly over the two-step GetSystemTime + SystemTimeToFileTime to avoid unnecessary calendar math overhead.
+**Action:** Return the raw time unit directly to eliminate unnecessary CPU cycles and use GetSystemTimeAsFileTime with a fallback for Windows CE.
