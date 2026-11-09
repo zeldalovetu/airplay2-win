@@ -1,0 +1,3 @@
+## 2023-11-20 - Inefficient time retrieval and redundant arithmetic on hot path
+**Learning:** In the airplay2-win codebase (VideoSource/utils/xdw_socket_ipc.c), `xdw_get_sys_time_ms` is on the hot path (IPC messaging). It performs two-step time retrieval (`GetSystemTime` + `SystemTimeToFileTime`) which has calendar math overhead. It also splits the raw microseconds into seconds/microseconds with division and modulo, only to immediately recombine them back into raw microseconds before returning.
+**Action:** Use `GetSystemTimeAsFileTime` directly (with a Windows CE fallback). Eliminate the redundant splitting/recombining of the time value and return the raw microseconds directly.
